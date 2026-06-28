@@ -1,0 +1,143 @@
+@import "tailwindcss";
+
+/* ── Hoshi terminal theme ────────────────────────────────────────────────────
+   Financial-terminal aesthetic: cool near-black, cyan/ice chrome, green gains /
+   red losses, amber reserved for warnings & rate-limit. Martian Mono = display
+   chrome, IBM Plex Mono = data. */
+
+:root {
+  --bg: #060809;
+  --bg-raised: #0b1015;
+  --bg-sunken: #040506;
+  --bg-overlay: #0d141a;
+
+  --line: #18222a;
+  --line-bright: #283742;
+
+  --fg: #c6d2d9;
+  --fg-dim: #889aa3;
+  --fg-faint: #6c7b85;
+
+  --cyan: #22d3ee;
+  --cyan-bright: #6ae9fb;
+  --cyan-dim: #0c6a7d;
+
+  --gain: #3ddc84;
+  --loss: #ff5c5c;
+  --warn: #ffb000;
+
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-raised: var(--bg-raised);
+  --color-bg-sunken: var(--bg-sunken);
+  --color-bg-overlay: var(--bg-overlay);
+
+  --color-line: var(--line);
+  --color-line-bright: var(--line-bright);
+
+  --color-fg: var(--fg);
+  --color-fg-dim: var(--fg-dim);
+  --color-fg-faint: var(--fg-faint);
+
+  --color-cyan: var(--cyan);
+  --color-cyan-bright: var(--cyan-bright);
+  --color-cyan-dim: var(--cyan-dim);
+
+  --color-gain: var(--gain);
+  --color-loss: var(--loss);
+  --color-warn: var(--warn);
+
+  --font-display: var(--font-martian-mono), ui-monospace, monospace;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+}
+
+@layer base {
+  html {
+    background-color: var(--bg);
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--cyan) 32%, transparent);
+    color: var(--cyan-bright);
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--line-bright) transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  *::-webkit-scrollbar-thumb {
+    background: var(--line-bright);
+  }
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+/* ── animations ──────────────────────────────────────────────────────────── */
+@keyframes hoshi-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes hoshi-beam {
+  0% {
+    transform: translateY(-10vh);
+  }
+  100% {
+    transform: translateY(110vh);
+  }
+}
+
+@keyframes hoshi-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* blinking block cursor */
+.hoshi-cursor {
+  display: inline-block;
+  width: 0.6ch;
+  height: 1em;
+  margin-left: 0.1ch;
+  translate: 0 0.12em;
+  background: var(--cyan);
+  animation: hoshi-blink 1.1s steps(1) infinite;
+}
+
+.hoshi-pulse {
+  animation: hoshi-pulse 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hoshi-cursor,
+  .hoshi-pulse {
+    animation: none;
+  }
+}

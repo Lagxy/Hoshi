@@ -1,0 +1,86 @@
+// Hoshi — token screener schema.
+// Prisma 7 runs the Rust-free query compiler, so the runtime client is paired
+// with the better-sqlite3 driver adapter (see src/lib/db/client.ts).
+// Provider is sqlite for v1; swapping to postgresql later is a one-line change
+// here plus swapping the adapter — all queries live behind src/lib/db/repo.ts.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+/// Stage-1 bulk market data (/coins/markets). One row per token, refreshed on fetch.
+/// Freshness is judged by fetchedAt (markets cache TTL = 15 min).
+model MarketCache {
+  coingeckoId         String   @id
+  rank                Int?
+  symbol              String
+  name                String
+  image               String?
+  currentPrice        Float?
+  marketCap           Float?
+  fdv                 Float?
+  totalVolume         Float?
+  circulatingSupply   Float?
+  totalSupply         Float?
+  maxSupply           Float?
+  ath                 Float?
+  athChangePercentage Float?
+  pc1h                Float?
+  pc24h               Float?
+  pc7d                Float?
+  pc14d               Float?
+  pc30d               Float?
+  pc200d              Float?
+  pc1y                Float?
+  fetchedAt           DateTime
+
+  @@index([rank])
+  @@index([fetchedAt])
+}
+
+/// Stage-2 classification detail (/coins/{id}): genesis_date + categories from one call.
+/// Long TTL (~7 days) — these fields are near-static.
+model DetailCache {
+  coingeckoId String   @id
+  genesisDate String? // ISO date string (yyyy-mm-dd) or null
+  categories  String // JSON string[]
+  fetchedAt   DateTime
+
+  @@index([fetchedAt])
+}
+
+/// Cached /coins/categories/list for the category multi-select (TTL ~24h).
+model CategoryList {
+  categoryId String   @id
+  name       String
+  fetchedAt  DateTime
+}
+
+/// A scan = both live job state and saved history (self-contained results snapshot).
+model Scan {
+  id              String    @id @default(cuid())
+  ownerId         String? // SaaS seam — unused in v1
+  status          String // queued|running_stage1|running_stage2|completed|failed|cancelled|interrupted
+  universeSize    Int
+  logic           String // AND|OR
+  conditions      String // JSON of Condition[]
+  resultColumns   String? // JSON of field keys shown in the results table
+  stage           String? // human-readable current stage label
+  progressCurrent Int       @default(0)
+  progressTotal   Int       @default(0)
+  etaSeconds      Int?
+  matchedCount    Int       @default(0)
+  results         String? // JSON snapshot of matched token rows
+  errorMessage    String?
+  createdAt       DateTime  @default(now())
+  startedAt       DateTime?
+  finishedAt      DateTime?
+
+  @@index([status])
+  @@index([createdAt])
+}
